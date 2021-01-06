@@ -1,0 +1,261 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2577
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww38200\viewh14120\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 var scene = 0;\
+var temp_letter;\
+var letters = [];\
+var temp_text;\
+var texts = [];\
+var temp_activeLetter;\
+var activeLetters = [];\
+var prev_button;\
+var button;\
+\
+var Letter = function(x,y,character,size,font,color) \{\
+    this.x = x;\
+    this.y = y;\
+    this.char = character;\
+    this.size = size;\
+    this.font = createFont(font);\
+    this.color = color;\
+\};\
+Letter.prototype.render = function() \{\
+    fill(this.color);\
+    textFont(this.font);\
+    textSize(this.size);\
+    text(this.char, this.x, this.y);\
+\};\
+var renderLetters = function() \{\
+    for (var i = 0; i < letters.length; i++) \{\
+        letters[i].render();\
+    \}\
+\};\
+var addLetter = function(char,x,y,size,font,color) \{\
+    temp_letter = new Letter(x,y,char,size,font,color);\
+    letters.push(temp_letter);\
+\};\
+\
+var ActiveLetter = function(char,x,y,size,font,color,effect,end,timeAdd) \{\
+    this.char = char;\
+    this.ox = x;\
+    this.oy = y;\
+    this.x = x;\
+    this.y = y;\
+    this.size = size;\
+    this.font = font;\
+    this.color = color;\
+    this.effect = effect;\
+    this.startTime = millis() + timeAdd;\
+    this.time = millis() - this.startTime;\
+    this.endScene = end;\
+    this.active = 1;\
+\};\
+\
+var processActiveLetters = function() \{\
+    for (var i = 0; i < activeLetters.length; i++) \{\
+        if (scene !== activeLetters[i].endScene) \{\
+            activeLetters[i].time = millis() - activeLetters[i].startTime;\
+            if (activeLetters[i].effect === 0) \{\
+                addLetter(activeLetters[i].char,activeLetters[i].x,activeLetters[i].y,activeLetters[i].size,activeLetters[i].font,activeLetters[i].color);\
+            \}\
+            else if (activeLetters[i].effect === 1) \{\
+                addLetter(activeLetters[i].char,activeLetters[i].ox,activeLetters[i].oy + cos(activeLetters[i].time/2),activeLetters[i].size,activeLetters[i].font,activeLetters[i].color);\
+            \}\
+            else if (activeLetters[i].effect === 2) \{\
+                if (activeLetters[i].time < 500) \{\
+                    addLetter(activeLetters[i].char,(400+activeLetters[i].x)-(4*this.time/5),activeLetters[i].y,activeLetters[i].size,activeLetters[i].font,activeLetters[i].color);\
+                \}\
+                else \{\
+                    addLetter(activeLetters[i].char,activeLetters[i].x,activeLetters[i].y,activeLetters[i].size,activeLetters[i].font,activeLetters[i].color);\
+                    fill(255, 0, 0);\
+                \}\
+            \}\
+        \}\
+        else \{\
+            activeLetters.splice(i,1);\
+            i -= 1;\
+        \}\
+    \}\
+\};\
+\
+var addActiveLetter = function(char,x,y,size,font,color,effect,end,time) \{\
+    temp_activeLetter = new ActiveLetter(char,x,y,size,font,color,effect,end,time);\
+    activeLetters.push(temp_activeLetter);\
+\};\
+\
+var Text = function(input,x,y,size,font,color,letterWidth,lineHeight,start,end,effect) \{\
+    this.text = input;\
+    this.x = x;\
+    this.y = y;\
+    this.size = size;\
+    this.font = font;\
+    this.color = color;\
+    this.spacing = letterWidth;\
+    this.height = lineHeight;\
+    this.activated = 0;\
+    this.start = start;\
+    this.end = end;\
+    this.effect = effect;\
+\};\
+\
+var processText = function() \{\
+    for (var i = 0; i < texts.length; i++) \{\
+        if (texts[i].activated === 0 && texts[i].start === scene) \{\
+            texts[i].activated = 1;\
+            var line = 0;\
+            var char = 0;\
+            for (var j = 0; j < texts[i].text.length; j++) \{\
+                if (texts[i].text[j] !== "#" || texts[i].text[j+1] !== "!") \{\
+                    if (texts[i].effect === 0 || texts[i].effect === 1) \{\
+                        addActiveLetter(texts[i].text[j],texts[i].x + texts[i].spacing*char,texts[i].y + texts[i].height*line,texts[i].size,texts[i].font,texts[i].color,texts[i].effect,texts[i].end,0);\
+                        char++;\
+                    \}\
+                    else if (texts[i].effect === 2) \{\
+                        addActiveLetter(texts[i].text[j],texts[i].x + texts[i].spacing*char,texts[i].y + texts[i].height*line,texts[i].size,texts[i].font,texts[i].color,1,texts[i].end,j*6);\
+                        char++;\
+                    \}\
+                    else if (texts[i].effect === 3) \{\
+                        addActiveLetter(texts[i].text[j],texts[i].x + texts[i].spacing*char,texts[i].y + texts[i].height*line,texts[i].size,texts[i].font,texts[i].color,2,texts[i].end,j*25);\
+                        char++;\
+                    \}\
+                \}\
+                else \{\
+                    j += 1;\
+                    line += 1;\
+                    char = 0;\
+                \}\
+            \}\
+        \}\
+    \}\
+\};\
+\
+var addText = function(input,x,y,size,font,color,letterWidth,lineHeight,start,end,effect) \{\
+    temp_text = new Text(input,x,y,size,font,color,letterWidth,lineHeight,start,end,effect);\
+    texts.push(temp_text);\
+\};\
+\
+var sceneManage = function() \{\
+    if (scene === 0) \{\
+        addText("Happy Birthday!",135,100,20,"monospace",color(224, 76, 163),8,12,1,7,3);\
+        scene = 1;\
+    \}\
+    else if (scene === 2) \{\
+        addText("Congrats on making it half way to 30!",60,150,20,"monospace",color(54, 54, 54),8,12,3,7,3);\
+        scene = 3;\
+    \}\
+    else if (scene === 4) \{\
+        addText("        Its also 1/6 the way to 90 #! Probably a better way of thinking about it",36,168,20,"monospace",color(54, 54, 54),8,18,5,7,3);\
+        scene = 5;\
+    \}\
+    else if (scene === 6) \{\
+        addText(" I also wanted to add before I start that, #! as you know, I'm not the best with words.#!         So keep that in mind =)",36,168,20,"monospace",color(54, 54, 54),8,18,7,9,3);\
+        scene = 7;\
+    \}\
+    \
+    \
+    else if (scene === 8) \{\
+        addText("           I wanted to write this to#! thank you for being such an amazing girlfriend",12,50,20,"monospace",color(54, 54, 54),8,18,9,17,3);\
+        scene = 9;\
+    \}\
+    else if (scene === 10) \{\
+        addText("     Do you remember 8/25 when you asked#!and I told you how I was hesitant because I#!         was afraid of it ending?",28,94,20,"monospace",color(54, 54, 54),8,18,11,17,3);\
+        scene = 11;\
+    \}\
+    else if (scene === 12) \{\
+        addText("            Now I've realized that#!      I don't have to be afraid of that.#!        At some point we might decide#!            that it won't work out,#!    but the thing is I know I'll look back#!   at the time we were together with a smile#!      and I'm excited for the memories#!  we'll be making together after this as well.",12,166,20,"monospace",color(54, 54, 54),8,18,13,17,3);\
+        scene = 13;\
+    \}\
+    else if (scene === 14) \{\
+        addText("    So thank you for all that you've given me",12,328,20,"monospace",color(54, 54, 54),8,18,15,17,3);\
+        scene = 15;\
+    \}\
+    \
+    else if (scene === 16) \{\
+        addText("           I'm reminded everyday of#!       how lucky I am you have you because#!          you make every day better.",12,50,20,"monospace",color(54, 54, 54),8,18,17,25,3);\
+        scene = 17;\
+    \}\
+    else if (scene === 18) \{\
+        addText("The way you smile when you see me in the morning#! and how sitting next to you makes me feel like#!      the whole day is going to be better.",12,122,20,"monospace",color(54, 54, 54),8,18,19,25,3);\
+        scene = 19;\
+    \}\
+    else if (scene === 20) \{\
+        addText("   When I'm tired or down you can always tell#!      and find a way to lift my spirits.",12,194,20,"monospace",color(54, 54, 54),8,18,21,25,3);\
+        scene = 21;\
+    \}\
+    else if (scene === 22) \{\
+        addText("     When I have something I need to say#! I always come to you because I know I can trust #!  you to listen and care. And when I'm excited#!about something and need to explain you always#! take the time to listen and you tell me you're#!happy to but I can't thank you enough for that#!        because it means so much to me.",12,248,20,"monospace",color(54, 54, 54),8,18,23,25,3);\
+        scene = 23;\
+    \}\
+    \
+    else if (scene === 24) \{\
+        addText("         I like how we can have the #!  silliest conversations and also talk about #!subjects that are hard to wrap our minds around.",12,50,20,"monospace",color(54, 54, 54),8,18,25,27,3);\
+        scene = 25;\
+    \}\
+    \
+    else if (scene === 26) \{\
+        addText("          But there's also the times#!   when things don't really go right#!      and we're frustrated at each other.",12,50,20,"monospace",color(54, 54, 54),8,18,27,35,3);\
+        scene = 27;\
+    \}\
+    else if (scene === 28) \{\
+        addText("   But it's how we work through those problems#! that really shows how much we love each other.",12,122,20,"monospace",color(54, 54, 54),8,18,29,35,3);\
+        scene = 29;\
+    \}\
+    else if (scene === 30) \{\
+        addText("    We talk and we each try to understand#!       why the other did what they did.#!   And when we're hurt we let each other know#! because we care enough about the relationship.",12,176,20,"monospace",color(54, 54, 54),8,18,31,35,3);\
+        scene = 31;\
+    \}\
+    else if (scene === 32) \{\
+        addText("        Ayu, I know I say it a lot but#!              I love you so much#!        and this means so so much to me.",12,266,20,"monospace",color(54, 54, 54),8,18,33,35,3);\
+        scene = 33;\
+    \}\
+    \
+    else if (scene === 34) \{\
+        addText("Love,",175,183,20,"monospace",color(47, 144, 163),8,18,35,39,3);\
+        scene = 35;\
+    \}\
+    else if (scene === 36) \{\
+        addText("Joshua Shew",175,200,20,"monospace",color(47, 144, 163),8,18,37,39,3);\
+        scene = 37;\
+    \}\
+\};\
+\
+var update_button = function() \{\
+	prev_button = button;\
+	stroke(0, 0, 0);\
+	fill(255,255,255);\
+	strokeWeight(2);\
+	rect(350,370,25,10);\
+	triangle(375,365,375,385,390,375);\
+	noStroke();\
+	rect(352,371,25,8);\
+	\
+	if (mouseX < 390 && mouseX > 350 && mouseY > 365 && mouseY < 385 &&  mouseIsPressed) \{\
+		button = 1;\
+	\}\
+	else \{\
+		button = 0;\
+	\}\
+	if (prev_button === 0 && button === 1) \{\
+		scene++;\
+	\}\
+\};\
+\
+var draw = function() \{\
+    background(255,255,255);\
+    //stroke(255, 0, 0);line(200,0,200,400);\
+    update_button();\
+    fill(255, 0, 0);\
+    sceneManage();\
+    letters = [];\
+    processText();\
+    processActiveLetters();\
+    //textSize(10);\
+    renderLetters();\
+    ellipse(mouseX-2,mouseY-2,4,4);\
+    text(scene,385,10);\
+\};\
+}
